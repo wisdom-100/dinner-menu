@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>오늘 뭐 먹지?</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:#fff4ef;color:#222;min-height:100vh}
+.wrap{width:min(92%,520px);margin:0 auto;padding:28px 0 40px}
+header{text-align:center;margin-bottom:18px}
+.logo{font-size:48px}
+h1{font-size:30px;margin:5px 0;letter-spacing:-1.5px}
+p{color:#888;margin:8px 0}
+.card{background:#fff;border-radius:24px;padding:20px;margin:12px 0;box-shadow:0 7px 25px #0000000d}
+h2{font-size:16px;margin:0 0 12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+button{font:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.choice{border:2px solid #eee;background:#fafafa;border-radius:14px;padding:13px 8px;font-weight:700;cursor:pointer}
+.choice.selected{border-color:#ff6f4d;background:#fff0eb;color:#e95838}
+.result{height:180px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background:#fff9f6}
+.small{font-size:13px;color:#aaa}
+#menu{font-size:32px;font-weight:900;margin:9px 0;letter-spacing:-1px}
+#desc{font-size:14px;color:#777}
+#price{font-size:13px;color:#ff6f4d;font-weight:800;margin-top:7px}
+.main{display:block;width:100%;border:0;border-radius:17px;padding:17px;background:#ff704f;color:#fff;font-size:18px;font-weight:900;cursor:pointer}
+.sub{display:block;width:100%;border:0;border-radius:15px;padding:13px;background:#f1f1f3;color:#555;font-size:14px;font-weight:800;margin-top:9px;cursor:pointer}
+.saved{display:flex;flex-wrap:wrap;gap:7px}
+.tag{border:0;background:#f3f3f5;border-radius:20px;padding:8px 11px;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="logo">🍽️</div>
+  <h1>오늘 뭐 먹지?</h1>
+  <p>조건을 고르고 버튼을 눌러보세요!</p>
+</header>
+
+<div class="card">
+<h2>🍴 음식 종류</h2>
+<div class="grid">
+<button class="choice selected" id="typeAll" onclick="setType('전체')">🎲 아무거나</button>
+<button class="choice" id="typeKorean" onclick="setType('한식')">🍚 한식</button>
+<button class="choice" id="typeJapanese" onclick="setType('일식')">🍣 일식</button>
+<button class="choice" id="typeChinese" onclick="setType('중식')">🥟 중식</button>
+<button class="choice" id="typeWestern" onclick="setType('양식')">🍝 양식</button>
+<button class="choice" id="typeOther" onclick="setType('기타')">🌮 기타</button>
+</div>
+</div>
+
+<div class="card">
+<h2>💰 가격대</h2>
+<div class="grid">
+<button class="choice selected" id="priceAll" onclick="setPrice('전체')">상관없음</button>
+<button class="choice" id="priceCheap" onclick="setPrice('저렴')">₩ 1만원 이하</button>
+<button class="choice" id="priceNormal" onclick="setPrice('보통')">₩₩ 1~2만원</button>
+<button class="choice" id="priceExpensive" onclick="setPrice('비쌈')">₩₩₩ 2만원 이상</button>
+</div>
+</div>
+
+<div class="card result">
+<div class="small">✨ 오늘의 추천</div>
+<div id="menu">👇 버튼을 눌러보세요!</div>
+<div id="desc">조건에 맞는 메뉴를 골라드릴게요.</div>
+<div id="price"></div>
+</div>
+
+<button class="main" onclick="recommend()">🎲 저녁 메뉴 추천받기</button>
+<button class="sub" onclick="saveCurrent()">❤️ 현재 메뉴 저장하기</button>
+
+<div class="card">
+<h2>❤️ 저장한 메뉴</h2>
+<div id="saved" class="saved"><span style="color:#aaa;font-size:14px">아직 없어요.</span></div>
+</div>
+</div>
+
+<script>
+var menus=[
+["김치찌개","한식","저렴","얼큰하고 든든한 한국인의 소울푸드!"],
+["제육볶음","한식","보통","매콤달콤 밥도둑 메뉴."],
+["삼겹살","한식","보통","오늘은 고기 제대로 먹는 날!"],
+["비빔밥","한식","저렴","여러 재료를 한 번에 맛있게."],
+["부대찌개","한식","보통","햄과 소시지가 듬뿍, 푸짐하게!"],
+["닭갈비","한식","보통","매콤한 닭갈비에 볶음밥까지."],
+["돈까스","일식","보통","바삭한 돈까스는 실패가 없죠!"],
+["초밥","일식","비쌈","깔끔하고 신선한 한 끼."],
+["라멘","일식","보통","뜨끈한 국물로 하루를 마무리해요."],
+["규동","일식","저렴","달달한 소고기 덮밥 한 그릇."],
+["마라탕","중식","보통","원하는 재료를 골라 얼얼하게!"],
+["짜장면","중식","저렴","간단하고 맛있는 국민 메뉴."],
+["짬뽕","중식","보통","얼큰한 국물이 당기는 날."],
+["탕수육","중식","비쌈","바삭하고 새콤달콤하게 즐겨요."],
+["파스타","양식","보통","오늘은 분위기 있게 파스타!"],
+["피자","양식","보통","친구와 함께 먹기 좋은 메뉴."],
+["스테이크","양식","비쌈","오늘 하루 수고한 나에게 제대로 된 한 끼."],
+["햄버거","양식","저렴","간편하고 든든하게 먹어볼까요?"],
+["쌀국수","기타","저렴","깔끔한 국물과 쫄깃한 면."],
+["치킨","기타","보통","오늘 저녁은 바삭한 치킨!"]
+];
+
+var selectedType="전체";
+var selectedPrice="전체";
+var current=null;
+
+function setType(v){
+ selectedType=v;
+ document.querySelectorAll("#typeAll,#typeKorean,#typeJapanese,#typeChinese,#typeWestern,#typeOther").forEach(function(b){b.classList.remove("selected")});
+ var ids={"전체":"typeAll","한식":"typeKorean","일식":"typeJapanese","중식":"typeChinese","양식":"typeWestern","기타":"typeOther"};
+ document.getElementById(ids[v]).classList.add("selected");
+}
+function setPrice(v){
+ selectedPrice=v;
+ document.querySelectorAll("#priceAll,#priceCheap,#priceNormal,#priceExpensive").forEach(function(b){b.classList.remove("selected")});
+ var ids={"전체":"priceAll","저렴":"priceCheap","보통":"priceNormal","비쌈":"priceExpensive"};
+ document.getElementById(ids[v]).classList.add("selected");
+}
+function recommend(){
+ var list=menus.filter(function(m){return (selectedType==="전체"||m[1]===selectedType)&&(selectedPrice==="전체"||m[2]===selectedPrice)});
+ if(!list.length){document.getElementById("menu").textContent="조건에 맞는 메뉴가 없어요 😢";return}
+ var pick=list[Math.floor(Math.random()*list.length)];
+ if(list.length>1&&current){while(pick[0]===current[0])pick=list[Math.floor(Math.random()*list.length)]}
+ current=pick;
+ document.getElementById("menu").textContent="🍴 "+pick[0];
+ document.getElementById("desc").textContent=pick[3];
+ document.getElementById("price").textContent=pick[2]==="저렴"?"약 1만원 이하":pick[2]==="보통"?"약 1~2만원":"2만원 이상";
+}
+function saveCurrent(){
+ if(!current){recommend();return}
+ var key="dinnerSaved";
+ var saved=JSON.parse(localStorage.getItem(key)||"[]");
+ if(saved.indexOf(current[0])<0)saved.push(current[0]);
+ localStorage.setItem(key,JSON.stringify(saved));
+ showSaved();
+}
+function showSaved(){
+ var box=document.getElementById("saved");
+ var saved=JSON.parse(localStorage.getItem("dinnerSaved")||"[]");
+ if(!saved.length){box.innerHTML='<span style="color:#aaa;font-size:14px">아직 없어요.</span>';return}
+ box.innerHTML="";
+ saved.forEach(function(name){
+   var b=document.createElement("button");
+   b.className="tag"; b.textContent="❤️ "+name;
+   box.appendChild(b);
+ });
+}
+showSaved();
+</script>
+</body>
+</html>
